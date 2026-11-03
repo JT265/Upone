@@ -1,0 +1,1987 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- Balises PWA & Plein Écran Mobile -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0f172a">
+    <link rel="manifest" href='data:application/manifest+json,{"name":"UPONE COACHING","short_name":"UPONE","start_url":".","display":"standalone","background_color":"#090d16","theme_color":"#0f172a","orientation":"portrait","icons":[{"src":"https://placehold.co/192x192/0ea5e9/090d16?text=UP","sizes":"192x192","type":"image/png"}]}'>
+    <title>UPONE COACHING — Carnet d'Entraînement</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Chakra+Petch:ital,wght@0,600;0,700;1,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Chakra Petch', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                        },
+                        accent: {
+                            400: '#a3e635',
+                            500: '#84cc16',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #090d16;
+            color: #f1f5f9;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(14, 165, 233, 0.10) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(132, 204, 22, 0.07) 0px, transparent 50%);
+            background-attachment: fixed;
+        }
+        /* Hide number input spinners */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+        .glass-card {
+            background: rgba(17, 24, 39, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .pulse-badge {
+            animation: subtlePulse 2.5s infinite;
+        }
+        @keyframes subtlePulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.75; }
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-24 selection:bg-brand-500 selection:text-white">
+
+    <!-- Top Header -->
+    <header class="sticky top-0 z-30 glass-card border-b border-slate-800/80 shadow-lg">
+        <div class="max-w-4xl mx-auto px-3 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-accent-500 flex items-center justify-center shadow-md shadow-brand-500/20">
+                    <i class="fa-solid fa-dumbbell text-slate-950 text-lg"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="font-display font-bold text-lg sm:text-xl tracking-wider uppercase italic text-white leading-none">
+                            UPONE <span class="text-brand-400">COACHING</span>
+                        </h1>
+                        <span id="cloudStatusBadge" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-emerald-400 border border-slate-700 flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Mémoire Locale
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-0.5">Suivi des charges & répétitions • Comparateur J-7</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-1.5 sm:gap-2">
+                <button id="fullscreenToggleBtn" title="Activer / Désactiver le mode Plein Écran" class="text-xs font-medium px-2.5 py-2 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-200 border border-slate-700 transition flex items-center gap-1.5 active:scale-95">
+                    <i class="fa-solid fa-expand text-brand-400" id="fullscreenIcon"></i>
+                    <span class="hidden md:inline" id="fullscreenBtnText">Plein Écran</span>
+                </button>
+                <button id="seedDemoBtn" title="Générer des données d'exemple sur la semaine passée (J-7) pour tester" class="text-xs font-medium px-2.5 py-2 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-300 border border-slate-700 transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i>
+                    <span class="hidden sm:inline">Démo J-7</span>
+                </button>
+                <button id="openHistoryBtn" class="text-xs font-semibold px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-clock-rotate-left text-brand-400"></i>
+                    <span>Historique</span>
+                    <span id="totalSessionsCount" class="px-1.5 py-0.2 bg-brand-500/20 text-brand-300 rounded-md text-[11px]">0</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-4xl mx-auto px-3 sm:px-6 pt-4 space-y-5">
+
+        <!-- Barre de Sauvegarde & Export Fichier (.json) sur Téléphone -->
+        <section class="glass-card rounded-2xl p-3.5 sm:p-4 border border-slate-800/90 shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-start sm:items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-brand-500/15 border border-brand-500/30 text-brand-400 flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-file-shield text-sm"></i>
+                </div>
+                <div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <h2 class="text-xs sm:text-sm font-bold text-white uppercase tracking-wide">Sauvegarde / Export (.json)</h2>
+                        <span id="backupStatusPill" class="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                            0 séance en mémoire
+                        </span>
+                    </div>
+                    <p id="lastExportDateText" class="text-[11px] sm:text-xs text-slate-400 mt-0.5">
+                        Dernier export fichier : Aucun export récent
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2 self-end sm:self-center shrink-0">
+                <button id="quickExportJsonBtn" class="text-xs font-bold px-3 py-2 rounded-xl bg-brand-500 hover:bg-brand-400 text-slate-950 shadow-md shadow-brand-500/10 transition flex items-center gap-1.5 active:scale-95">
+                    <i class="fa-solid fa-download"></i>
+                    <span>Exporter mes données (.json)</span>
+                </button>
+                <label class="text-xs font-semibold px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition flex items-center gap-1.5 cursor-pointer active:scale-95">
+                    <i class="fa-solid fa-file-import text-accent-400"></i>
+                    <span>Importer (.json)</span>
+                    <input type="file" id="quickImportJsonInput" accept=".json,application/json" class="hidden">
+                </label>
+            </div>
+        </section>
+
+        <!-- Date Navigation & Weekly Schedule Bar -->
+        <section class="glass-card rounded-2xl p-4 shadow-xl space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <!-- Date Picker & Day Controls -->
+                <div class="flex items-center gap-1.5 sm:gap-2">
+                    <button id="prevDayBtn" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700/80 transition active:scale-95" title="Jour précédent">
+                        <i class="fa-solid fa-chevron-left text-xs"></i>
+                    </button>
+                    <div class="relative flex-1 sm:flex-initial">
+                        <input type="date" id="sessionDateInput" class="w-full sm:w-auto bg-slate-900/90 text-white font-semibold text-sm px-3.5 py-2 rounded-xl border border-slate-700 focus:outline-none focus:border-brand-400 transition cursor-pointer">
+                    </div>
+                    <button id="nextDayBtn" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700/80 transition active:scale-95" title="Jour suivant">
+                        <i class="fa-solid fa-chevron-right text-xs"></i>
+                    </button>
+                    <button id="todayBtn" class="px-3 py-2 rounded-xl bg-brand-500/15 hover:bg-brand-500/25 text-brand-300 border border-brand-500/30 text-xs font-semibold transition">
+                        Aujourd'hui
+                    </button>
+                </div>
+
+                <!-- Formatted Human Date & Day Badge -->
+                <div class="flex items-center justify-between sm:justify-end gap-2">
+                    <span id="humanDateLabel" class="text-xs sm:text-sm font-medium text-slate-300 capitalize"></span>
+                    <span id="dayTypeBadge" class="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg bg-brand-500/20 text-brand-300 border border-brand-500/30">
+                        JOUR 1
+                    </span>
+                </div>
+            </div>
+
+            <!-- 7-Day Interactive Pill Bar (Lun = Day 1 ... Dim = Day 7) -->
+            <div class="grid grid-cols-7 gap-1.5 sm:gap-2 pt-1" id="weekDaysBar">
+                <!-- Populated dynamically by JS -->
+            </div>
+        </section>
+
+        <!-- J-7 Closest Session Control Banner -->
+        <section id="prevWeekControlBanner" class="glass-card rounded-2xl p-4 border-l-4 border-l-amber-400 shadow-lg">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="flex items-start sm:items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center shrink-0 text-amber-400">
+                        <i class="fa-solid fa-calendar-check text-lg"></i>
+                    </div>
+                    <div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <h2 class="text-sm sm:text-base font-bold text-white">Référence Semaine Précédente (J-7)</h2>
+                            <span id="j7FoundBadge" class="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                                Recherche...
+                            </span>
+                        </div>
+                        <p id="j7DetailsText" class="text-xs text-slate-400 mt-0.5">
+                            Recherche de la séance la plus proche de votre date moins 7 jours...
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 self-end sm:self-center shrink-0">
+                    <button id="toggleJ7Btn" class="px-3.5 py-2 rounded-xl font-semibold text-xs sm:text-sm transition flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-md shadow-amber-500/10">
+                        <i class="fa-solid fa-eye" id="toggleJ7Icon"></i>
+                        <span id="toggleJ7BtnText">Voir la séance à J-7</span>
+                    </button>
+                    <button id="copyAllJ7Btn" class="hidden px-3 py-2 rounded-xl font-semibold text-xs bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 transition items-center gap-1.5" title="Pré-remplir la séance actuelle avec les poids et répétitions de la séance J-7">
+                        <i class="fa-solid fa-copy"></i>
+                        <span>Copier J-7</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Workout Header & Rest Timer Bar -->
+        <section class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1">
+            <div>
+                <h2 id="workoutTitle" class="font-display font-bold text-xl sm:text-2xl uppercase tracking-wide text-white">
+                    DAY 1 — PUSH [CHEST / SHOULDERS / TRICEPS]
+                </h2>
+                <p id="workoutSubtitle" class="text-xs sm:text-sm text-slate-400">
+                    Entrez vos poids (kg) et répétitions pour chaque série. Sauvegarde automatique activée.
+                </p>
+            </div>
+
+            <!-- Built-in Quick Rest Timer -->
+            <div class="flex items-center gap-2 self-start sm:self-auto bg-slate-900/90 border border-slate-800 px-3 py-1.5 rounded-xl">
+                <i class="fa-solid fa-stopwatch text-brand-400 text-sm"></i>
+                <span id="restTimerDisplay" class="font-mono font-bold text-sm text-white w-12 text-center">01:30</span>
+                <button id="startTimerBtn" class="text-xs px-2 py-1 rounded-lg bg-brand-500/20 hover:bg-brand-500/30 text-brand-300 font-semibold transition">
+                    Go
+                </button>
+                <button id="resetTimerBtn" class="text-xs px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 transition" title="Réinitialiser (90s)">
+                    <i class="fa-solid fa-rotate-right"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- Exercises Container (or Rest Day Card) -->
+        <section id="exercisesListContainer" class="space-y-4">
+            <!-- Dynamically populated by JS -->
+        </section>
+
+        <!-- Session Notes & Save Card -->
+        <section id="sessionFooterCard" class="glass-card rounded-2xl p-4 space-y-3">
+            <div class="flex items-center justify-between">
+                <label for="sessionGlobalNotes" class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                    <i class="fa-solid fa-pen-to-square text-brand-400"></i> Notes personnelles de la séance
+                </label>
+                <span id="lastSavedIndicator" class="text-xs text-emerald-400 font-medium flex items-center gap-1 opacity-0 transition-opacity duration-300">
+                    <i class="fa-solid fa-check-circle"></i> Enregistré
+                </span>
+            </div>
+            <textarea id="sessionGlobalNotes" rows="2" placeholder="Sensations, énergie, douleurs éventuelles, réglages de siège..." class="w-full bg-slate-900/90 border border-slate-800 rounded-xl p-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 transition"></textarea>
+            
+            <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
+                <div class="text-xs text-slate-400" id="sessionVolumeSummary">
+                    Volume total du jour : <strong class="text-white">0 kg</strong> • Séries validées : <strong class="text-white">0</strong>
+                </div>
+                <button id="manualSaveBtn" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-400 hover:to-brand-500 text-white font-bold text-sm shadow-lg shadow-brand-500/20 transition flex items-center gap-2 active:scale-95">
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    <span>Enregistrer la séance</span>
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- History & All Sessions Modal -->
+    <div id="historyModal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6">
+        <div class="glass-card w-full max-w-2xl rounded-2xl border border-slate-700 shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+            <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <i class="fa-solid fa-clock-rotate-left text-brand-400 text-lg"></i>
+                    <h3 class="font-display font-bold text-lg uppercase text-white">Historique des séances enregistrées</h3>
+                </div>
+                <button id="closeHistoryModalBtn" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="p-4 overflow-y-auto space-y-3 flex-1" id="historyModalList">
+                <!-- Populated by JS -->
+            </div>
+
+            <div class="p-4 border-t border-slate-800 bg-slate-900/60 flex flex-wrap items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                    <button id="exportJsonBtn" class="text-xs font-semibold px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-download text-brand-400"></i> Exporter JSON
+                    </button>
+                    <label class="text-xs font-semibold px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition flex items-center gap-1.5 cursor-pointer">
+                        <i class="fa-solid fa-upload text-accent-400"></i> Importer JSON
+                        <input type="file" id="importJsonInput" accept=".json" class="hidden">
+                    </label>
+                </div>
+                <button id="closeHistoryBottomBtn" class="text-xs font-semibold px-4 py-2 rounded-xl bg-brand-500 hover:bg-brand-400 text-slate-950 transition">
+                    Fermer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Toast Notification -->
+    <div id="toastNotification" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 pointer-events-none transition-all duration-300 glass-card border border-brand-500/40 px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 max-w-sm">
+        <div id="toastIcon" class="w-8 h-8 rounded-lg bg-brand-500/20 text-brand-400 flex items-center justify-center shrink-0">
+            <i class="fa-solid fa-check"></i>
+        </div>
+        <div class="text-xs sm:text-sm font-medium text-white" id="toastMessage">Action effectuée</div>
+    </div>
+
+    <!-- Application & Firebase Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, deleteDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // ==========================================
+        // 1. PROGRAMME COMPLET D'ENTRAÎNEMENT (Lundi = Jour 1)
+        // Exactement extrait des 5 fiches UPONE COACHING
+        // ==========================================
+        const WORKOUT_PLAN = {
+            1: {
+                dayNumber: 1,
+                dayNameFr: "Lundi",
+                shortDayFr: "Lun",
+                title: "DAY 1 — PUSH [CHEST / SHOULDERS / TRICEPS]",
+                shortTitle: "Push",
+                isRest: false,
+                exercises: [
+                    {
+                        id: "d1_a",
+                        code: "a.",
+                        name: "Incline DB Press",
+                        setsLabel: "3–4",
+                        defaultSets: 4,
+                        repsLabel: "8–10",
+                        tempo: "3:1:2:1",
+                        notes: "Lower slowly to upper chest, elbows slightly tucked, smooth press."
+                    },
+                    {
+                        id: "d1_b",
+                        code: "b.",
+                        name: "Chest Press Machine",
+                        setsLabel: "3",
+                        defaultSets: 3,
+                        repsLabel: "10–12",
+                        tempo: "3:1:2:1",
+                        notes: "Shoulders back, grip slightly wide, squeeze chest at the top."
+                    },
+                    {
+                        id: "d1_c",
+                        code: "c.",
+                        name: "Machine Shoulder Press",
+                        setsLabel: "3",
+                        defaultSets: 3,
+                        repsLabel: "8–10",
+                        tempo: "3:1:2:1",
+                        notes: "Lower to chin height, keep core braced, press with control."
+                    },
+                    {
+                        id: "d1_d",
+                        code: "d.",
+                        name: "DB Lateral Raises",
+                        setsLabel: "3",
+                        defaultSets: 3,
+                        repsLabel: "12–15",
+                        tempo: "3:1:2:1",
+                        notes: "Lead with elbows, lift to shoulder height, don't swing."
+                    },
+                    {
+                        id: "d1_e",
+                        code: "e.",
+                        name: "Cable Triceps Pushdown",
+                        setsLabel: "3",
+                        defaultSets: 3,
+                        repsLabel: "12–15",
+                        tempo: "3:1:2:1",
+                        notes: "Keep elbows locked in, extend fully, pause at bottom."
+                    },
+                    {
+                        id: "d1_f",
+                        code: "f.",
+                        name: "Overhead Rope Extension",
+                        setsLabel: "3",
+                        defaultSets: 3,
+                        repsLabel: "12–15",
+                        tempo: "3:1:2:1",
+                        notes: "Stretch behind head, extend straight up, keep back still."
+                    }
+                ]
+            },
+            2: {
+                dayNumber: 2,
+                dayNameFr: "Mardi",
+                shortDayFr: "Mar",
+                title: "DAY 2 — PULL [BACK / REAR DELTS / BICEPS]",
+                shortTitle: "Pull",
+                isRest: false,
+                exercises: [
+                    {
+                        id: "d2_a",
+                        code: "a.",
+                        name: "Lat Pulldown",
+                        setsLabel: "3–4",
+                        defaultSets: 4,
+                        repsLabel: "8–10",
+                        tempo: "3:1:2:1",
+                        notes: "Pull elbows down to ribs, chest tall, avoid using momentum."
+                    },
+                    {
+                        id: "d2_b",
+                        code: "b.",
+                        name: "Chest-Supported Row",
+                        setsLabel: "3",
+                        defaultSets: 3,
+                        repsLabel: "8–10",
+                        tempo: "3:1:2:1",
+                        notes: "Pull to lower chest, squeeze shoulder blades, stay supported."
+                    },
+                    {
+                        id: "d2_c",
+                        code: "c.",
+                        name: "Seated Row",
+                        setsLabel: "3",
+                        defaultSets: 3,
+                        repsLabel: "10–12",
+                        tempo: "3:1:2:1",
+                        notes: "Sit tall, pull the handle to belly button, control the return."
+                    },
+                    {
+                        id: "d2_d",
+                        code: "d.",
+                        name: "Rear Delt Fly",
+                        setsLabel: "3",
+                        defaultSets: 3,
+                        repsLabel: "12–15",
+                        tempo: "3:1:2:1",
+                        notes: "Move arms wide, feel rear delts, avoid shrugging shoulders."
+                    },
+                    {
+                        id: "d2_e",
+                        code: "e.",
+                        name: "Dumbbell Curls",
+                        setsLabel: "3",
+                        defaultSets: 3,
+                        repsLabel: "10–12",
+                        tempo: "3:1:2:1",
+                        notes: "Keep elbows by your sides, curl slowly, palms up, full squeeze."
+                    },
+                    {
+                        id: "d2_f",
+                        code: "f.",
+                        name: "Incline DB Curls",
+                        setsLabel: "2–3",
+                        defaultSets: 3,
+                        repsLabel: "10–12",
+                        tempo: "3:1:2:1",
+                        notes: "Let arms stretch fully at bottom, curl slowly, no swinging."
+                    }
+                ]
+            },
+            3: {
+                dayNumber: 3,
+                dayNameFr: "Mercredi",
+                shortDayFr: "Mer",
+                title: "DAY 3 — LEGS",
+                shortTitle: "Legs",
+                isRest: false,
+                exercises: [
+                    {
+                        id: "d3_a",
+                        code: "a.",
+                        name: "Back Squat or Hack Squat",
+                        setsLabel: "3–4",
+                        defaultSets: 4,
+                        repsLabel: "6–8",
+                        tempo: "3:1:2:1",
+                        notes: "Brace core, squat under control, push through the whole foot."
+                    },
+                    {
+                        id: "d3_b",
+                        code: "b.",
+                        name: "Leg Press",
+                        setsLabel: "3",
+                        defaultSets: 3,
+                        repsLabel: "10–12",
+                        tempo: "3:1:2:1",
+                        notes: "Feet mid-platform, knees to 90°, no locking out."
+                    },
+                    {
+                        id: "d3_c",
+                        code: "c.",
+                        name: "Leg Extension",
+                        setsLabel: "3",
+                        defaultSets: 3,
+                        repsLabel: "12–15",
+                        tempo: "3:1:2:1",
+                        notes: "Lift with quads, pause at top, lower slowly."
+                    },
+                    {
+                        id: "d3_d",
+                        code: "d.",
+                        name: "Hamstring Curl",
+                        setsLabel: "3",
+                        defaultSets: 3,
+                        repsLabel: "10–12",
+                        tempo: "3:1:2:1",
+                        notes: "Keep hips down, curl smoothly, squeeze at bottom."
+                    },
+                    {
+                        id: "d3_e",
+                        code: "e.",
+                        name: "Calf Raise",
+                        setsLabel: "3–4",
+                        defaultSets: 4,
+                        repsLabel: "12–15",
+                        tempo: "3:1:2:1",
+                        notes: "Full stretch, push through big toe, slow descent."
+                    }
+                ]
+            },
+            4: {
+                dayNumber: 4,
+                dayNameFr: "Jeudi",
+                shortDayFr: "Jeu",
+                title: "DAY 4 — REST (JOUR DE REPOS)",
+                shortTitle: "Repos",
+                isRest: true,
+                restFocus: "Récupération active, mobilité légère, hydratation et sommeil.",
+                exercises: []
+            },
+            5: {
+                dayNumber: 5,
+                dayNameFr: "Vendredi",
+                shortDayFr: "Ven",
+                title: "DAY 5 — CHEST / BACK / ARMS",
+                shortTitle: "Upper",
+                isRest: false,
+                exercises: [
+                    {
+                        id: "d5_a",
+                        code: "a.",
+                        name: "Flat DB Press",
+                        setsLabel: "3–4",
+                        defaultSets: 4,
+                        repsLabel: "6–8",
+                        tempo: "3:1:2:1",
+                        notes: "Lower smoothly; elbows tucked; press evenly."
+                    },
+                    {
+                        id: "d5_b",
+                        code: "b.",
+                        name: "Cable Chest Fly",
+                        setsLabel: "3",
+                        defaultSets: 3,
+                        repsLabel: "12–15",
+                        tempo: "3:1:2:1",
+                        notes: "Slight elbow bend, hands meet at chest height."
+                    },
+                    {
+                        id: "d5_c",
+                        code: "c.",
+                        name: "Lat Pulldown (Neutral Grip)",
+                        setsLabel: "3",
+                        defaultSets: 3,
+                        repsLabel: "10–12",
+                        tempo: "3:1:2:1",
+                        notes: "Pull elbows down and forward; chest stays up."
+                    },
+                    {
+                        id: "d5_d",
+                        code: "d.",
+                        name: "Seated Row",
+                        setsLabel: "3",
+                        defaultSets: 3,
+                        repsLabel: "10–12",
+                        tempo: "3:1:2:1",
+                        notes: "Pull to stomach, squeeze mid-back, slow return."
+                    },
+                    {
+                        id: "d5_e",
+                        code: "e.",
+                        name: "Cable Bicep Curls",
+                        setsLabel: "3",
+                        defaultSets: 3,
+                        repsLabel: "12–15",
+                        tempo: "3:1:2:1",
+                        notes: "Keep elbows still, curl smoothly, full squeeze."
+                    },
+                    {
+                        id: "d5_f",
+                        code: "f.",
+                        name: "Tricep Dips / Dip Machine",
+                        setsLabel: "3",
+                        defaultSets: 3,
+                        repsLabel: "8–10",
+                        tempo: "3:1:2:1",
+                        notes: "Lower to 90°, push up under control."
+                    }
+                ]
+            },
+            6: {
+                dayNumber: 6,
+                dayNameFr: "Samedi",
+                shortDayFr: "Sam",
+                title: "DAY 6 — SHOULDERS + LEGS",
+                shortTitle: "Shoulders/Legs",
+                isRest: false,
+                exercises: [
+                    {
+                        id: "d6_a",
+                        code: "a.",
+                        name: "DB Shoulder Press",
+                        setsLabel: "3–4",
+                        defaultSets: 4,
+                        repsLabel: "6–8",
+                        tempo: "3:1:2:1",
+                        notes: "Lower to chin height, don't lock elbows, stay braced."
+                    },
+                    {
+                        id: "d6_b",
+                        code: "b.",
+                        name: "Lateral Raises",
+                        setsLabel: "3",
+                        defaultSets: 3,
+                        repsLabel: "12–15",
+                        tempo: "3:1:2:1",
+                        notes: "Lift to shoulder height, soft elbows, slow lower."
+                    },
+                    {
+                        id: "d6_c",
+                        code: "c.",
+                        name: "Front Squat / Hack Squat",
+                        setsLabel: "3",
+                        defaultSets: 3,
+                        repsLabel: "6–8",
+                        tempo: "3:1:2:1",
+                        notes: "Keep torso upright, and drive knees forward comfortably."
+                    },
+                    {
+                        id: "d6_d",
+                        code: "d.",
+                        name: "Hamstring Curl",
+                        setsLabel: "3",
+                        defaultSets: 3,
+                        repsLabel: "10–12",
+                        tempo: "3:1:2:1",
+                        notes: "Curl smoothly, squeeze hard, control stretch."
+                    },
+                    {
+                        id: "d6_e",
+                        code: "e.",
+                        name: "Leg Extension",
+                        setsLabel: "3",
+                        defaultSets: 3,
+                        repsLabel: "12–15",
+                        tempo: "3:1:2:1",
+                        notes: "Lock quads at top, pause, lower slowly."
+                    }
+                ]
+            },
+            7: {
+                dayNumber: 7,
+                dayNameFr: "Dimanche",
+                shortDayFr: "Dim",
+                title: "DAY 7 — REST (JOUR DE REPOS)",
+                shortTitle: "Repos",
+                isRest: true,
+                restFocus: "Focus : steps (marche), hydration, protein, recovery.",
+                exercises: []
+            }
+        };
+
+        // ==========================================
+        // 2. APPLICATION STATE & DATE UTILITIES
+        // ==========================================
+        function toDateInputString(dateObj) {
+            const year = dateObj.getFullYear();
+            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const day = String(dateObj.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function parseLocalDate(yyyyMmDd) {
+            const [y, m, d] = yyyyMmDd.split('-').map(Number);
+            return new Date(y, m - 1, d, 12, 0, 0);
+        }
+
+        function addDaysToDateStr(yyyyMmDd, deltaDays) {
+            const d = parseLocalDate(yyyyMmDd);
+            d.setDate(d.getDate() + deltaDays);
+            return toDateInputString(d);
+        }
+
+        function diffInDays(dateStrA, dateStrB) {
+            const dA = parseLocalDate(dateStrA);
+            const dB = parseLocalDate(dateStrB);
+            return Math.round((dA - dB) / (1000 * 60 * 60 * 24));
+        }
+
+        // Convert JS getDay() (0=Sun, 1=Mon...6=Sat) to Plan Day (1=Lundi ... 7=Dimanche)
+        function getPlanDayFromDateStr(yyyyMmDd) {
+            const d = parseLocalDate(yyyyMmDd);
+            const jsDay = d.getDay();
+            return jsDay === 0 ? 7 : jsDay;
+        }
+
+        function formatHumanDateFr(yyyyMmDd) {
+            const d = parseLocalDate(yyyyMmDd);
+            return d.toLocaleDateString('fr-FR', {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+            });
+        }
+
+        // State
+        const LOCAL_STORAGE_KEY = 'upone_coaching_sessions_v1';
+        const LAST_EXPORT_STORAGE_KEY = 'upone_coaching_last_export_v1';
+
+        let selectedDateStr = toDateInputString(new Date());
+        let showJ7Comparison = false;
+        let allSessionsMap = {}; // { "YYYY-MM-DD": { dateStr, dayNumber, exercises: { exId: [ {weight, reps, done} ] }, notes, updatedAt } }
+        let allowRestDayOverride = false; // If user wants to train on a rest day anyway
+        let overrideDayNumber = 1;
+
+        // Firebase variables
+        let db = null;
+        let auth = null;
+        let currentUser = null;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'upone-coaching-tracker';
+        let saveTimeout = null;
+
+        // ==========================================
+        // 3. LOCAL STORAGE & CLOUD STORAGE INITIALIZATION
+        // ==========================================
+        function loadFromLocalStorage() {
+            try {
+                const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (parsed && typeof parsed === 'object') {
+                        allSessionsMap = parsed;
+                    }
+                }
+            } catch (e) {
+                console.error("Erreur de lecture localStorage:", e);
+            }
+        }
+
+        function saveToLocalStorage() {
+            try {
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(allSessionsMap));
+            } catch (e) {
+                console.error("Erreur d'écriture localStorage:", e);
+            }
+        }
+
+        function updateBackupStatusBanner() {
+            const count = Object.values(allSessionsMap).filter(hasSessionAnyFilledSet).length;
+            const pill = document.getElementById('backupStatusPill');
+            const lastExportEl = document.getElementById('lastExportDateText');
+
+            if (pill) {
+                pill.textContent = `${count} séance${count > 1 ? 's' : ''} en mémoire`;
+            }
+
+            if (lastExportEl) {
+                const lastExport = localStorage.getItem(LAST_EXPORT_STORAGE_KEY);
+                if (lastExport) {
+                    lastExportEl.innerHTML = `Dernier export fichier : <strong class="text-slate-200">${lastExport}</strong>`;
+                } else {
+                    lastExportEl.textContent = "Dernier export fichier : Aucun export enregistré (pensez à exporter régulièrement)";
+                }
+            }
+        }
+
+        async function initCloudStorage() {
+            loadFromLocalStorage();
+            renderFullUI();
+
+            const badge = document.getElementById('cloudStatusBadge');
+            try {
+                if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+                    const firebaseConfig = JSON.parse(__firebase_config);
+                    const app = initializeApp(firebaseConfig);
+                    auth = getAuth(app);
+                    db = getFirestore(app);
+
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+
+                    onAuthStateChanged(auth, (user) => {
+                        currentUser = user;
+                        if (user) {
+                            badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Local + Cloud`;
+                            subscribeToUserSessions(user.uid);
+                        }
+                    });
+                } else {
+                    badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> 100% Local`;
+                }
+            } catch (err) {
+                console.error("Mode local actif:", err);
+                badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> 100% Local`;
+            }
+        }
+
+        function subscribeToUserSessions(uid) {
+            if (!db || !uid) return;
+            const colRef = collection(db, 'artifacts', appId, 'users', uid, 'workout_sessions');
+            onSnapshot(
+                colRef,
+                (snapshot) => {
+                    snapshot.forEach((docSnap) => {
+                        const data = docSnap.data();
+                        if (data && data.dateStr) {
+                            allSessionsMap[data.dateStr] = {
+                                dateStr: data.dateStr,
+                                dayNumber: data.dayNumber,
+                                notes: data.notes || "",
+                                updatedAt: data.updatedAt || Date.now(),
+                                exercises: typeof data.exercisesJson === 'string'
+                                    ? JSON.parse(data.exercisesJson)
+                                    : (data.exercises || {})
+                            };
+                        }
+                    });
+                    saveToLocalStorage();
+                    renderFullUI();
+                },
+                (error) => {
+                    console.error("Erreur de lecture Firestore:", error);
+                }
+            );
+        }
+
+        async function persistSession(dateStr) {
+            const sessionObj = allSessionsMap[dateStr];
+            if (!sessionObj) return;
+
+            sessionObj.updatedAt = Date.now();
+            saveToLocalStorage();
+            updateBackupStatusBanner();
+            showSavedCheckmark();
+
+            if (db && currentUser) {
+                try {
+                    const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'workout_sessions', dateStr);
+                    await setDoc(docRef, {
+                        dateStr: sessionObj.dateStr,
+                        dayNumber: sessionObj.dayNumber,
+                        notes: sessionObj.notes || "",
+                        updatedAt: sessionObj.updatedAt,
+                        exercisesJson: JSON.stringify(sessionObj.exercises || {})
+                    });
+                } catch (e) {
+                    console.error("Erreur de sauvegarde Cloud:", e);
+                }
+            }
+        }
+
+        function scheduleAutoSave(dateStr) {
+            if (saveTimeout) clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => {
+                persistSession(dateStr);
+            }, 450);
+        }
+
+        function showSavedCheckmark() {
+            const indicator = document.getElementById('lastSavedIndicator');
+            if (!indicator) return;
+            indicator.classList.remove('opacity-0');
+            setTimeout(() => {
+                indicator.classList.add('opacity-0');
+            }, 2000);
+        }
+
+        // ==========================================
+        // 4. ALGORITHME DE RECHERCHE DE LA SÉANCE J-7 LA PLUS PROCHE
+        // ==========================================
+        /**
+         * Cherche la séance enregistrée (ayant au moins une donnée saisie)
+         * dont la date est la plus proche de (selectedDate - 7 jours).
+         * Priorise les séances du même Jour d'entraînement (ex: Day 1 Push),
+         * ou à défaut toute séance passée contenant des exercices communs.
+         */
+        function findClosestSessionMinus7Days(currentDateStr, activeDayNumber) {
+            const targetDateStr = addDaysToDateStr(currentDateStr, -7);
+            const candidates = Object.values(allSessionsMap).filter(sess => {
+                if (!sess || sess.dateStr === currentDateStr) return false;
+                // Vérifie que la séance contient au moins une série remplie
+                if (!hasSessionAnyFilledSet(sess)) return false;
+                return true;
+            });
+
+            if (candidates.length === 0) {
+                return { targetDateStr, match: null };
+            }
+
+            // Séances du même type de jour (ex: Lundi Push) antérieures à la date actuelle
+            const sameDayTypePast = candidates.filter(
+                s => Number(s.dayNumber) === Number(activeDayNumber) && s.dateStr < currentDateStr
+            );
+
+            // Séances du même type de jour (toutes dates confondues hors date actuelle)
+            const sameDayTypeAny = candidates.filter(
+                s => Number(s.dayNumber) === Number(activeDayNumber)
+            );
+
+            const pool = sameDayTypePast.length > 0
+                ? sameDayTypePast
+                : (sameDayTypeAny.length > 0 ? sameDayTypeAny : candidates);
+
+            let bestMatch = null;
+            let smallestDistanceToJ7 = Infinity;
+
+            for (const sess of pool) {
+                const distanceToJ7 = Math.abs(diffInDays(sess.dateStr, targetDateStr));
+                if (distanceToJ7 < smallestDistanceToJ7) {
+                    smallestDistanceToJ7 = distanceToJ7;
+                    bestMatch = sess;
+                }
+            }
+
+            const daysFromCurrent = bestMatch ? diffInDays(bestMatch.dateStr, currentDateStr) : null;
+            const daysFromTargetJ7 = bestMatch ? diffInDays(bestMatch.dateStr, targetDateStr) : null;
+
+            return {
+                targetDateStr,
+                match: bestMatch,
+                daysFromCurrent,
+                daysFromTargetJ7
+            };
+        }
+
+        function hasSessionAnyFilledSet(sess) {
+            if (!sess || !sess.exercises) return false;
+            for (const exId of Object.keys(sess.exercises)) {
+                const sets = sess.exercises[exId];
+                if (Array.isArray(sets)) {
+                    for (const s of sets) {
+                        if ((s.weight !== "" && s.weight !== null && s.weight !== undefined) ||
+                            (s.reps !== "" && s.reps !== null && s.reps !== undefined)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        // ==========================================
+        // 5. GESTION DES SÉRIES DE LA SÉANCE COURANTE
+        // ==========================================
+        function getActiveDayNumber() {
+            const naturalDay = getPlanDayFromDateStr(selectedDateStr);
+            if (WORKOUT_PLAN[naturalDay].isRest && allowRestDayOverride) {
+                return overrideDayNumber;
+            }
+            return naturalDay;
+        }
+
+        function ensureCurrentSessionInitialized() {
+            const activeDayNumber = getActiveDayNumber();
+            const dayPlan = WORKOUT_PLAN[activeDayNumber];
+
+            if (!allSessionsMap[selectedDateStr]) {
+                allSessionsMap[selectedDateStr] = {
+                    dateStr: selectedDateStr,
+                    dayNumber: activeDayNumber,
+                    notes: "",
+                    exercises: {}
+                };
+            }
+
+            const sess = allSessionsMap[selectedDateStr];
+            sess.dayNumber = activeDayNumber;
+
+            if (!dayPlan.isRest) {
+                dayPlan.exercises.forEach(ex => {
+                    if (!sess.exercises[ex.id] || !Array.isArray(sess.exercises[ex.id]) || sess.exercises[ex.id].length === 0) {
+                        sess.exercises[ex.id] = Array.from({ length: ex.defaultSets }, () => ({
+                            weight: "",
+                            reps: "",
+                            done: false
+                        }));
+                    }
+                });
+            }
+            return sess;
+        }
+
+        // ==========================================
+        // 6. RENDU DE L'INTERFACE UTILISATEUR
+        // ==========================================
+        function renderFullUI() {
+            const dateInput = document.getElementById('sessionDateInput');
+            if (dateInput.value !== selectedDateStr) {
+                dateInput.value = selectedDateStr;
+            }
+
+            const naturalDay = getPlanDayFromDateStr(selectedDateStr);
+            const activeDayNumber = getActiveDayNumber();
+            const dayPlan = WORKOUT_PLAN[activeDayNumber];
+
+            // Mise à jour de l'en-tête de date
+            document.getElementById('humanDateLabel').textContent = formatHumanDateFr(selectedDateStr);
+            const dayBadge = document.getElementById('dayTypeBadge');
+            dayBadge.textContent = `JOUR ${activeDayNumber} • ${dayPlan.shortTitle.toUpperCase()}`;
+
+            // Compteur total de séances sauvegardées
+            const activeSavedSessionsCount = Object.values(allSessionsMap).filter(hasSessionAnyFilledSet).length;
+            document.getElementById('totalSessionsCount').textContent = activeSavedSessionsCount;
+            updateBackupStatusBanner();
+
+            // Rendu de la barre des 7 jours de la semaine
+            renderWeekDaysBar(naturalDay);
+
+            // Rendu de la bannière J-7
+            const j7Info = findClosestSessionMinus7Days(selectedDateStr, activeDayNumber);
+            renderJ7Banner(j7Info, dayPlan);
+
+            // Titre de la séance
+            document.getElementById('workoutTitle').textContent = dayPlan.title;
+
+            // Si jour de repos (Jeudi = Jour 4 ou Dimanche = Jour 7)
+            const container = document.getElementById('exercisesListContainer');
+            const footerCard = document.getElementById('sessionFooterCard');
+
+            if (dayPlan.isRest) {
+                footerCard.classList.add('hidden');
+                container.innerHTML = `
+                    <div class="glass-card rounded-2xl p-6 sm:p-8 text-center space-y-4 border border-slate-800">
+                        <div class="w-16 h-16 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center mx-auto text-2xl">
+                            <i class="fa-solid fa-battery-full"></i>
+                        </div>
+                        <div class="space-y-1">
+                            <span class="text-xs font-bold uppercase tracking-widest text-emerald-400">Récupération Musculaire</span>
+                            <h3 class="font-display font-bold text-2xl text-white uppercase">${dayPlan.dayNameFr} — Jour de Pause</h3>
+                            <p class="text-sm text-slate-300 max-w-md mx-auto pt-1">${dayPlan.restFocus}</p>
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 max-w-lg mx-auto pt-2">
+                            <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-3">
+                                <i class="fa-solid fa-shoe-prints text-brand-400 mb-1"></i>
+                                <div class="text-xs font-bold text-white">8k–10k pas</div>
+                                <div class="text-[11px] text-slate-400">Marche active</div>
+                            </div>
+                            <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-3">
+                                <i class="fa-solid fa-droplet text-sky-400 mb-1"></i>
+                                <div class="text-xs font-bold text-white">2.5L - 3L</div>
+                                <div class="text-[11px] text-slate-400">Hydratation</div>
+                            </div>
+                            <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-3">
+                                <i class="fa-solid fa-drumstick-bite text-amber-400 mb-1"></i>
+                                <div class="text-xs font-bold text-white">Protéines</div>
+                                <div class="text-[11px] text-slate-400">Objectif maintenu</div>
+                            </div>
+                            <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-3">
+                                <i class="fa-solid fa-bed text-indigo-400 mb-1"></i>
+                                <div class="text-xs font-bold text-white">7h30 - 8h+</div>
+                                <div class="text-[11px] text-slate-400">Sommeil profond</div>
+                            </div>
+                        </div>
+                        <div class="pt-4 border-t border-slate-800/80 max-w-md mx-auto">
+                            <p class="text-xs text-slate-400 mb-2.5">Vous avez décalé une séance sur ce ${dayPlan.dayNameFr.toLowerCase()} ?</p>
+                            <div class="flex flex-wrap justify-center gap-1.5">
+                                ${[1, 2, 3, 5, 6].map(dNum => `
+                                    <button data-override-day="${dNum}" class="override-day-btn text-xs font-semibold px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-brand-500 hover:text-slate-950 text-slate-300 border border-slate-700 transition">
+                                        Charger Jour ${dNum} (${WORKOUT_PLAN[dNum].shortTitle})
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                container.querySelectorAll('.override-day-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        allowRestDayOverride = true;
+                        overrideDayNumber = Number(btn.getAttribute('data-override-day'));
+                        renderFullUI();
+                    });
+                });
+                return;
+            }
+
+            footerCard.classList.remove('hidden');
+            const currentSession = ensureCurrentSessionInitialized();
+            document.getElementById('sessionGlobalNotes').value = currentSession.notes || "";
+
+            // Construction des cartes d'exercices
+            container.innerHTML = dayPlan.exercises.map((ex, exIdx) => {
+                const setsArray = currentSession.exercises[ex.id] || [];
+                const prevSetsArray = (j7Info.match && j7Info.match.exercises && j7Info.match.exercises[ex.id])
+                    ? j7Info.match.exercises[ex.id]
+                    : null;
+
+                return renderExerciseCardHTML(ex, exIdx, setsArray, prevSetsArray, j7Info);
+            }).join('');
+
+            attachExerciseListeners();
+            updateVolumeSummary();
+        }
+
+        function renderWeekDaysBar(selectedNaturalDay) {
+            const bar = document.getElementById('weekDaysBar');
+            // Calcul du Lundi de la semaine correspondant à selectedDateStr
+            const deltaToMonday = 1 - selectedNaturalDay;
+            const mondayDateStr = addDaysToDateStr(selectedDateStr, deltaToMonday);
+
+            let html = '';
+            for (let dayNum = 1; dayNum <= 7; dayNum++) {
+                const pillDateStr = addDaysToDateStr(mondayDateStr, dayNum - 1);
+                const plan = WORKOUT_PLAN[dayNum];
+                const isSelected = pillDateStr === selectedDateStr;
+                const hasData = hasSessionAnyFilledSet(allSessionsMap[pillDateStr]);
+                const dayOfMonth = pillDateStr.split('-')[2];
+
+                html += `
+                    <button data-pill-date="${pillDateStr}" class="week-pill-btn group relative flex flex-col items-center justify-center py-2 px-1 rounded-xl border transition-all ${
+                        isSelected
+                            ? 'bg-gradient-to-b from-brand-500 to-brand-600 text-white border-brand-400 shadow-lg shadow-brand-500/25 scale-[1.02]'
+                            : plan.isRest
+                                ? 'bg-slate-900/50 hover:bg-slate-800/80 text-slate-400 border-slate-800/80'
+                                : 'bg-slate-900/90 hover:bg-slate-800 text-slate-200 border-slate-800'
+                    }">
+                        <span class="text-[10px] font-bold uppercase tracking-wider ${isSelected ? 'text-brand-100' : 'text-slate-400'}">
+                            ${plan.shortDayFr} ${dayOfMonth}
+                        </span>
+                        <span class="text-xs font-extrabold mt-0.5 truncate max-w-full px-1 ${
+                            isSelected ? 'text-white' : plan.isRest ? 'text-slate-500' : 'text-brand-400'
+                        }">
+                            ${plan.isRest ? 'Repos' : `J${dayNum} ${plan.shortTitle}`}
+                        </span>
+                        ${hasData ? `
+                            <span class="w-1.5 h-1.5 rounded-full mt-1 ${isSelected ? 'bg-white' : 'bg-accent-400'}" title="Séance enregistrée"></span>
+                        ` : `
+                            <span class="w-1.5 h-1.5 rounded-full mt-1 opacity-0"></span>
+                        `}
+                    </button>
+                `;
+            }
+            bar.innerHTML = html;
+
+            bar.querySelectorAll('.week-pill-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    selectedDateStr = btn.getAttribute('data-pill-date');
+                    allowRestDayOverride = false;
+                    renderFullUI();
+                });
+            });
+        }
+
+        function renderJ7Banner(j7Info, dayPlan) {
+            const badge = document.getElementById('j7FoundBadge');
+            const details = document.getElementById('j7DetailsText');
+            const toggleBtn = document.getElementById('toggleJ7Btn');
+            const toggleBtnText = document.getElementById('toggleJ7BtnText');
+            const toggleIcon = document.getElementById('toggleJ7Icon');
+            const copyAllBtn = document.getElementById('copyAllJ7Btn');
+
+            if (dayPlan.isRest) {
+                badge.textContent = "Jour de repos";
+                badge.className = "text-[11px] font-semibold px-2 py-0.5 rounded-md bg-slate-800 text-slate-400 border border-slate-700";
+                details.textContent = "Sélectionnez un jour d'entraînement (Lun, Mar, Mer, Ven, Sam) pour comparer vos performances à J-7.";
+                toggleBtn.classList.add('opacity-50', 'pointer-events-none');
+                copyAllBtn.classList.add('hidden');
+                return;
+            }
+
+            toggleBtn.classList.remove('opacity-50', 'pointer-events-none');
+
+            if (j7Info.match) {
+                const matchDateHuman = formatHumanDateFr(j7Info.match.dateStr);
+                const exactDelta = Math.abs(j7Info.daysFromCurrent);
+                const diffWithJ7 = j7Info.daysFromTargetJ7;
+
+                let proximityLabel = `Exactement à J-7 (${j7Info.match.dateStr})`;
+                if (diffWithJ7 !== 0) {
+                    const sign = diffWithJ7 > 0 ? `+${diffWithJ7}j` : `${diffWithJ7}j`;
+                    proximityLabel = `À J-${exactDelta} (${sign} par rapport à la cible J-7 du ${j7Info.targetDateStr})`;
+                }
+
+                badge.textContent = `Trouvée : ${j7Info.match.dateStr}`;
+                badge.className = "text-[11px] font-semibold px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
+                details.innerHTML = `Séance de référence : <strong class="text-white capitalize">${matchDateHuman}</strong> • <span class="text-amber-300">${proximityLabel}</span>`;
+
+                copyAllBtn.classList.remove('hidden');
+                copyAllBtn.classList.add('flex');
+            } else {
+                badge.textContent = `Aucune séance vers le ${j7Info.targetDateStr}`;
+                badge.className = "text-[11px] font-semibold px-2 py-0.5 rounded-md bg-slate-800 text-slate-400 border border-slate-700";
+                details.innerHTML = `Aucune séance passée trouvée autour de <strong class="text-slate-200">${j7Info.targetDateStr}</strong> (J-7). Cliquez sur <strong class="text-amber-300">« Démo J-7 »</strong> en haut pour simuler la semaine précédente !`;
+                copyAllBtn.classList.add('hidden');
+                copyAllBtn.classList.remove('flex');
+            }
+
+            if (showJ7Comparison) {
+                toggleBtnText.textContent = "Masquer J-7";
+                toggleIcon.className = "fa-solid fa-eye-slash";
+                toggleBtn.className = "px-3.5 py-2 rounded-xl font-semibold text-xs sm:text-sm transition flex items-center gap-2 bg-amber-400 text-slate-950 ring-2 ring-amber-300 shadow-lg";
+            } else {
+                toggleBtnText.textContent = "Voir la séance à J-7";
+                toggleIcon.className = "fa-solid fa-eye";
+                toggleBtn.className = "px-3.5 py-2 rounded-xl font-semibold text-xs sm:text-sm transition flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-md";
+            }
+        }
+
+        function renderExerciseCardHTML(ex, exIdx, setsArray, prevSetsArray, j7Info) {
+            // Résumé rapide de la séance J-7 pour cet exercice
+            let prevSummaryPills = '';
+            if (prevSetsArray && prevSetsArray.some(s => s.weight !== "" || s.reps !== "")) {
+                const formattedSets = prevSetsArray
+                    .map((s, idx) => (s.weight || s.reps) ? `<span class="px-2 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/30 text-amber-200 font-mono text-xs">S${idx + 1}: <strong>${s.weight || 0}kg</strong> × ${s.reps || 0}</span>` : '')
+                    .filter(Boolean)
+                    .join(' ');
+
+                prevSummaryPills = `
+                    <div class="${showJ7Comparison ? 'flex' : 'hidden'} flex-wrap items-center justify-between gap-2 bg-amber-500/10 border border-amber-500/25 rounded-xl px-3 py-2 mt-2">
+                        <div class="flex flex-wrap items-center gap-1.5">
+                            <span class="text-[11px] font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1 mr-1">
+                                <i class="fa-solid fa-clock-rotate-left"></i> J-7 (${j7Info.match.dateStr}) :
+                            </span>
+                            ${formattedSets}
+                        </div>
+                        <button data-copy-ex="${ex.id}" class="copy-single-ex-btn text-[11px] font-semibold px-2 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 transition flex items-center gap-1">
+                            <i class="fa-solid fa-arrow-down"></i> Reprendre
+                        </button>
+                    </div>
+                `;
+            } else if (showJ7Comparison) {
+                prevSummaryPills = `
+                    <div class="flex items-center gap-2 bg-slate-900/70 border border-slate-800 rounded-xl px-3 py-2 mt-2 text-xs text-slate-400">
+                        <i class="fa-solid fa-circle-info text-slate-500"></i>
+                        <span>Aucune donnée enregistrée sur cet exercice lors de la semaine précédente.</span>
+                    </div>
+                `;
+            }
+
+            const rowsHTML = setsArray.map((setObj, setIndex) => {
+                const prevSet = (prevSetsArray && prevSetsArray[setIndex]) ? prevSetsArray[setIndex] : null;
+                const hasPrevSet = prevSet && (prevSet.weight !== "" || prevSet.reps !== "");
+
+                // Calcul du badge de progression en direct (série actuelle vs série J-7)
+                let progressionBadge = '';
+                if (hasPrevSet && (setObj.weight !== "" || setObj.reps !== "")) {
+                    const currW = parseFloat(setObj.weight) || 0;
+                    const prevW = parseFloat(prevSet.weight) || 0;
+                    const currR = parseInt(setObj.reps, 10) || 0;
+                    const prevR = parseInt(prevSet.reps, 10) || 0;
+
+                    const diffW = +(currW - prevW).toFixed(2);
+                    const diffR = currR - prevR;
+
+                    if (diffW > 0 || (diffW === 0 && diffR > 0)) {
+                        const labelParts = [];
+                        if (diffW !== 0) labelParts.push(`${diffW > 0 ? '+' : ''}${diffW}kg`);
+                        if (diffR !== 0) labelParts.push(`${diffR > 0 ? '+' : ''}${diffR} rep`);
+                        progressionBadge = `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 whitespace-nowrap">${labelParts.join(' / ')}</span>`;
+                    } else if (diffW === 0 && diffR === 0 && currW > 0) {
+                        progressionBadge = `<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 whitespace-nowrap">= J-7</span>`;
+                    } else if (currW > 0 || currR > 0) {
+                        const labelParts = [];
+                        if (diffW !== 0) labelParts.push(`${diffW > 0 ? '+' : ''}${diffW}kg`);
+                        if (diffR !== 0) labelParts.push(`${diffR > 0 ? '+' : ''}${diffR} rep`);
+                        progressionBadge = `<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-300 border border-rose-500/30 whitespace-nowrap">${labelParts.join(' / ')}</span>`;
+                    }
+                }
+
+                const prevPlaceholderWeight = hasPrevSet ? `J-7: ${prevSet.weight}kg` : "kg";
+                const prevPlaceholderReps = hasPrevSet ? `J-7: ${prevSet.reps}` : ` Cible ${ex.repsLabel}`;
+
+                return `
+                    <div class="grid grid-cols-12 gap-2 items-center py-2 px-2.5 rounded-xl border transition ${
+                        setObj.done
+                            ? 'bg-emerald-950/25 border-emerald-500/30'
+                            : 'bg-slate-900/75 border-slate-800/90 hover:border-slate-700'
+                    }">
+                        <!-- Numéro de Série -->
+                        <div class="col-span-2 sm:col-span-2 flex items-center gap-1.5">
+                            <span class="w-6 h-6 rounded-lg text-xs font-extrabold flex items-center justify-center ${
+                                setObj.done ? 'bg-emerald-500 text-slate-950' : 'bg-slate-800 text-slate-300'
+                            }">
+                                ${setIndex + 1}
+                            </span>
+                            <span class="hidden sm:inline text-xs font-medium text-slate-400">Série</span>
+                        </div>
+
+                        <!-- Rappel J-7 sur la ligne -->
+                        <div class="col-span-3 sm:col-span-3 flex flex-col justify-center">
+                            ${hasPrevSet ? `
+                                <span class="text-[11px] font-mono text-amber-300/90 leading-tight">
+                                    ${prevSet.weight || 0}kg × ${prevSet.reps || 0}
+                                </span>
+                                <span class="text-[10px] text-slate-500 leading-tight">Sem. dernière</span>
+                            ` : `
+                                <span class="text-[11px] text-slate-500 italic">—</span>
+                            `}
+                        </div>
+
+                        <!-- Input Poids (kg) -->
+                        <div class="col-span-3 sm:col-span-3">
+                            <div class="relative">
+                                <input
+                                    type="number"
+                                    step="0.5"
+                                    min="0"
+                                    inputmode="decimal"
+                                    data-ex-id="${ex.id}"
+                                    data-set-idx="${setIndex}"
+                                    data-field="weight"
+                                    value="${setObj.weight}"
+                                    placeholder="${prevPlaceholderWeight}"
+                                    class="set-input w-full bg-slate-950/90 text-white font-bold text-sm px-2.5 py-2 pr-7 rounded-lg border border-slate-700/80 focus:outline-none focus:border-brand-400 text-center"
+                                >
+                                <span class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-slate-500 pointer-events-none">kg</span>
+                            </div>
+                        </div>
+
+                        <!-- Input Répétitions -->
+                        <div class="col-span-3 sm:col-span-3">
+                            <div class="relative">
+                                <input
+                                    type="number"
+                                    step="1"
+                                    min="0"
+                                    inputmode="numeric"
+                                    data-ex-id="${ex.id}"
+                                    data-set-idx="${setIndex}"
+                                    data-field="reps"
+                                    value="${setObj.reps}"
+                                    placeholder="${prevPlaceholderReps}"
+                                    class="set-input w-full bg-slate-950/90 text-white font-bold text-sm px-2.5 py-2 pr-8 rounded-lg border border-slate-700/80 focus:outline-none focus:border-brand-400 text-center"
+                                >
+                                <span class="absolute right-1.5 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-slate-500 pointer-events-none">reps</span>
+                            </div>
+                        </div>
+
+                        <!-- Validation Série & Progression -->
+                        <div class="col-span-1 sm:col-span-1 flex items-center justify-end gap-1">
+                            <button
+                                type="button"
+                                data-ex-id="${ex.id}"
+                                data-set-idx="${setIndex}"
+                                class="toggle-set-done-btn w-8 h-8 rounded-lg flex items-center justify-center transition ${
+                                    setObj.done
+                                        ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
+                                        : 'bg-slate-800 hover:bg-slate-700 text-slate-400 border border-slate-700'
+                                }"
+                                title="Valider la série"
+                            >
+                                <i class="fa-solid fa-check text-xs"></i>
+                            </button>
+                        </div>
+
+                        ${progressionBadge ? `
+                            <div class="col-span-12 flex justify-end pt-0.5">
+                                ${progressionBadge}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+
+            return `
+                <article class="glass-card rounded-2xl p-4 sm:p-5 shadow-xl transition border border-slate-800/90 hover:border-slate-700/80">
+                    <!-- En-tête de l'exercice -->
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-800/80">
+                        <div class="flex items-start gap-3">
+                            <span class="w-8 h-8 rounded-xl bg-brand-500/15 border border-brand-500/30 text-brand-400 font-display font-bold text-base flex items-center justify-center shrink-0">
+                                ${ex.code}
+                            </span>
+                            <div>
+                                <h3 class="font-display font-bold text-base sm:text-lg text-white tracking-wide">
+                                    ${ex.name}
+                                </h3>
+                                <p class="text-xs text-slate-400 mt-0.5 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-circle-info text-brand-400/80 text-[11px]"></i>
+                                    <span>${ex.notes}</span>
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Badges Sets / Reps / Tempo -->
+                        <div class="flex flex-wrap items-center gap-1.5 shrink-0">
+                            <span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-slate-800 text-slate-200 border border-slate-700">
+                                <span class="text-slate-400 font-normal">Séries:</span> ${ex.setsLabel}
+                            </span>
+                            <span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-brand-500/15 text-brand-300 border border-brand-500/30">
+                                <span class="text-brand-400/80 font-normal">Reps:</span> ${ex.repsLabel}
+                            </span>
+                            <span class="text-xs font-mono font-semibold px-2.5 py-1 rounded-lg bg-slate-900 text-amber-300 border border-slate-800" title="Tempo d'exécution">
+                                <i class="fa-solid fa-gauge-high text-[10px] mr-1"></i>${ex.tempo}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Bandeau J-7 de l'exercice -->
+                    ${prevSummaryPills}
+
+                    <!-- En-têtes de colonnes des séries -->
+                    <div class="grid grid-cols-12 gap-2 px-2.5 pt-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                        <div class="col-span-2">Série</div>
+                        <div class="col-span-3 text-amber-400/90">Réf. J-7</div>
+                        <div class="col-span-3 text-center">Poids (kg)</div>
+                        <div class="col-span-3 text-center">Répétitions</div>
+                        <div class="col-span-1 text-right">OK</div>
+                    </div>
+
+                    <!-- Lignes de séries -->
+                    <div class="space-y-2 mt-1">
+                        ${rowsHTML}
+                    </div>
+
+                    <!-- Actions ajouter / retirer une série -->
+                    <div class="flex items-center justify-between pt-3 mt-3 border-t border-slate-800/60">
+                        <div class="flex items-center gap-2">
+                            <button type="button" data-add-set="${ex.id}" class="add-set-btn text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition flex items-center gap-1">
+                                <i class="fa-solid fa-plus text-brand-400 text-[10px]"></i> Ajouter une série
+                            </button>
+                            ${setsArray.length > 1 ? `
+                                <button type="button" data-remove-set="${ex.id}" class="remove-set-btn text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-rose-950/50 text-slate-400 hover:text-rose-300 border border-slate-800 transition flex items-center gap-1">
+                                    <i class="fa-solid fa-minus text-[10px]"></i> Retirer
+                                </button>
+                            ` : ''}
+                        </div>
+                        <button type="button" data-toggle-j7-inline="${ex.id}" class="inline-j7-btn text-xs font-medium text-amber-400/90 hover:text-amber-300 transition flex items-center gap-1">
+                            <i class="fa-solid fa-clock-rotate-left text-[11px]"></i>
+                            <span>${showJ7Comparison ? 'Masquer détail J-7' : 'Voir détail J-7'}</span>
+                        </button>
+                    </div>
+                </article>
+            `;
+        }
+
+        // ==========================================
+        // 7. GESTIONNAIRES D'ÉVÉNEMENTS DES EXERCICES
+        // ==========================================
+        function attachExerciseListeners() {
+            const container = document.getElementById('exercisesListContainer');
+
+            // Saisie Poids / Répétitions
+            container.querySelectorAll('.set-input').forEach(input => {
+                input.addEventListener('input', (e) => {
+                    const exId = e.target.getAttribute('data-ex-id');
+                    const setIdx = Number(e.target.getAttribute('data-set-idx'));
+                    const field = e.target.getAttribute('data-field');
+                    const val = e.target.value;
+
+                    const sess = ensureCurrentSessionInitialized();
+                    if (sess.exercises[exId] && sess.exercises[exId][setIdx]) {
+                        sess.exercises[exId][setIdx][field] = val;
+                        // Si poids et reps sont renseignés, coche automatiquement la série
+                        const s = sess.exercises[exId][setIdx];
+                        if (s.weight !== "" && s.reps !== "") {
+                            s.done = true;
+                        }
+                        updateVolumeSummary();
+                        scheduleAutoSave(selectedDateStr);
+                    }
+                });
+
+                // Rafraîchit les badges de progression au changement complet
+                input.addEventListener('change', () => {
+                    renderFullUI();
+                });
+            });
+
+            // Bouton validation de série (Done)
+            container.querySelectorAll('.toggle-set-done-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const exId = btn.getAttribute('data-ex-id');
+                    const setIdx = Number(btn.getAttribute('data-set-idx'));
+                    const sess = ensureCurrentSessionInitialized();
+                    if (sess.exercises[exId] && sess.exercises[exId][setIdx]) {
+                        sess.exercises[exId][setIdx].done = !sess.exercises[exId][setIdx].done;
+                        renderFullUI();
+                        scheduleAutoSave(selectedDateStr);
+                    }
+                });
+            });
+
+            // Ajouter une série
+            container.querySelectorAll('.add-set-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const exId = btn.getAttribute('data-add-set');
+                    const sess = ensureCurrentSessionInitialized();
+                    if (sess.exercises[exId]) {
+                        const lastSet = sess.exercises[exId][sess.exercises[exId].length - 1] || { weight: "", reps: "" };
+                        sess.exercises[exId].push({
+                            weight: lastSet.weight || "",
+                            reps: lastSet.reps || "",
+                            done: false
+                        });
+                        renderFullUI();
+                        scheduleAutoSave(selectedDateStr);
+                    }
+                });
+            });
+
+            // Retirer une série
+            container.querySelectorAll('.remove-set-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const exId = btn.getAttribute('data-remove-set');
+                    const sess = ensureCurrentSessionInitialized();
+                    if (sess.exercises[exId] && sess.exercises[exId].length > 1) {
+                        sess.exercises[exId].pop();
+                        renderFullUI();
+                        scheduleAutoSave(selectedDateStr);
+                    }
+                });
+            });
+
+            // Copier les données J-7 d'un seul exercice
+            container.querySelectorAll('.copy-single-ex-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const exId = btn.getAttribute('data-copy-ex');
+                    const activeDayNumber = getActiveDayNumber();
+                    const j7Info = findClosestSessionMinus7Days(selectedDateStr, activeDayNumber);
+                    if (!j7Info.match || !j7Info.match.exercises[exId]) return;
+
+                    const sess = ensureCurrentSessionInitialized();
+                    sess.exercises[exId] = j7Info.match.exercises[exId].map(s => ({
+                        weight: s.weight,
+                        reps: s.reps,
+                        done: true
+                    }));
+                    renderFullUI();
+                    scheduleAutoSave(selectedDateStr);
+                    showToast("Charges de J-7 copiées sur cet exercice !");
+                });
+            });
+
+            // Toggle J-7 depuis le bas d'une carte d'exercice
+            container.querySelectorAll('.inline-j7-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    showJ7Comparison = !showJ7Comparison;
+                    renderFullUI();
+                });
+            });
+        }
+
+        function updateVolumeSummary() {
+            const sess = allSessionsMap[selectedDateStr];
+            let totalVolume = 0;
+            let completedSets = 0;
+
+            if (sess && sess.exercises) {
+                Object.values(sess.exercises).forEach(sets => {
+                    if (Array.isArray(sets)) {
+                        sets.forEach(s => {
+                            const w = parseFloat(s.weight) || 0;
+                            const r = parseInt(s.reps, 10) || 0;
+                            if (w > 0 && r > 0) {
+                                totalVolume += w * r;
+                            }
+                            if (s.done || (w > 0 && r > 0)) {
+                                completedSets++;
+                            }
+                        });
+                    }
+                });
+            }
+
+            const summaryEl = document.getElementById('sessionVolumeSummary');
+            if (summaryEl) {
+                summaryEl.innerHTML = `Volume total du jour : <strong class="text-brand-400">${totalVolume.toLocaleString('fr-FR')} kg</strong> • Séries remplies : <strong class="text-emerald-400">${completedSets}</strong>`;
+            }
+        }
+
+        // ==========================================
+        // 8. GÉNÉRATEUR DE DONNÉES DE DÉMONSTRATION (SEMAINE PRÉCÉDENTE J-7)
+        // ==========================================
+        async function seedPreviousWeekDemoData() {
+            const demoWeights = {
+                // Day 1 Push
+                d1_a: [{ weight: "28", reps: "10" }, { weight: "28", reps: "9" }, { weight: "26", reps: "10" }, { weight: "26", reps: "8" }],
+                d1_b: [{ weight: "65", reps: "12" }, { weight: "65", reps: "11" }, { weight: "60", reps: "12" }],
+                d1_c: [{ weight: "45", reps: "10" }, { weight: "45", reps: "9" }, { weight: "42.5", reps: "10" }],
+                d1_d: [{ weight: "12", reps: "15" }, { weight: "12", reps: "14" }, { weight: "10", reps: "15" }],
+                d1_e: [{ weight: "25", reps: "15" }, { weight: "25", reps: "13" }, { weight: "22.5", reps: "15" }],
+                d1_f: [{ weight: "20", reps: "14" }, { weight: "20", reps: "12" }, { weight: "17.5", reps: "14" }],
+                // Day 2 Pull
+                d2_a: [{ weight: "60", reps: "10" }, { weight: "60", reps: "9" }, { weight: "55", reps: "10" }, { weight: "55", reps: "9" }],
+                d2_b: [{ weight: "50", reps: "10" }, { weight: "50", reps: "9" }, { weight: "45", reps: "10" }],
+                d2_c: [{ weight: "55", reps: "12" }, { weight: "55", reps: "11" }, { weight: "50", reps: "12" }],
+                d2_d: [{ weight: "35", reps: "15" }, { weight: "35", reps: "14" }, { weight: "30", reps: "15" }],
+                d2_e: [{ weight: "14", reps: "12" }, { weight: "14", reps: "10" }, { weight: "12", reps: "12" }],
+                d2_f: [{ weight: "10", reps: "12" }, { weight: "10", reps: "11" }, { weight: "10", reps: "10" }],
+                // Day 3 Legs
+                d3_a: [{ weight: "100", reps: "8" }, { weight: "100", reps: "7" }, { weight: "95", reps: "8" }, { weight: "95", reps: "8" }],
+                d3_b: [{ weight: "160", reps: "12" }, { weight: "160", reps: "11" }, { weight: "150", reps: "12" }],
+                d3_c: [{ weight: "55", reps: "15" }, { weight: "55", reps: "13" }, { weight: "50", reps: "15" }],
+                d3_d: [{ weight: "45", reps: "12" }, { weight: "45", reps: "11" }, { weight: "40", reps: "12" }],
+                d3_e: [{ weight: "70", reps: "15" }, { weight: "70", reps: "14" }, { weight: "70", reps: "13" }, { weight: "65", reps: "15" }],
+                // Day 5 Upper
+                d5_a: [{ weight: "32", reps: "8" }, { weight: "32", reps: "7" }, { weight: "30", reps: "8" }, { weight: "30", reps: "8" }],
+                d5_b: [{ weight: "15", reps: "15" }, { weight: "15", reps: "13" }, { weight: "12.5", reps: "15" }],
+                d5_c: [{ weight: "55", reps: "12" }, { weight: "55", reps: "11" }, { weight: "50", reps: "12" }],
+                d5_d: [{ weight: "55", reps: "12" }, { weight: "55", reps: "11" }, { weight: "50", reps: "12" }],
+                d5_e: [{ weight: "22.5", reps: "15" }, { weight: "22.5", reps: "13" }, { weight: "20", reps: "15" }],
+                d5_f: [{ weight: "15", reps: "10" }, { weight: "15", reps: "9" }, { weight: "10", reps: "10" }],
+                // Day 6 Shoulders + Legs
+                d6_a: [{ weight: "24", reps: "8" }, { weight: "24", reps: "8" }, { weight: "22", reps: "8" }, { weight: "22", reps: "7" }],
+                d6_b: [{ weight: "12", reps: "15" }, { weight: "12", reps: "14" }, { weight: "10", reps: "15" }],
+                d6_c: [{ weight: "85", reps: "8" }, { weight: "85", reps: "7" }, { weight: "80", reps: "8" }],
+                d6_d: [{ weight: "45", reps: "12" }, { weight: "45", reps: "11" }, { weight: "42.5", reps: "12" }],
+                d6_e: [{ weight: "55", reps: "15" }, { weight: "55", reps: "14" }, { weight: "50", reps: "15" }]
+            };
+
+            // Génère les 7 jours précédant la date sélectionnée (notamment exactement J-7)
+            for (let offset = -7; offset <= -1; offset++) {
+                const targetDate = addDaysToDateStr(selectedDateStr, offset);
+                const planDay = getPlanDayFromDateStr(targetDate);
+                const plan = WORKOUT_PLAN[planDay];
+                if (plan.isRest) continue;
+
+                const exData = {};
+                plan.exercises.forEach(ex => {
+                    if (demoWeights[ex.id]) {
+                        exData[ex.id] = demoWeights[ex.id].map(s => ({
+                            weight: s.weight,
+                            reps: s.reps,
+                            done: true
+                        }));
+                    }
+                });
+
+                allSessionsMap[targetDate] = {
+                    dateStr: targetDate,
+                    dayNumber: planDay,
+                    notes: "Séance de la semaine précédente (référence J-7)",
+                    updatedAt: Date.now(),
+                    exercises: exData
+                };
+
+                await persistSession(targetDate);
+            }
+
+            showJ7Comparison = true;
+            renderFullUI();
+            showToast("Séances de la semaine dernière (J-7) générées et affichées !");
+        }
+
+        // ==========================================
+        // 9. HISTORIQUE & EXPORT / IMPORT JSON
+        // ==========================================
+        function renderHistoryModal() {
+            const listEl = document.getElementById('historyModalList');
+            const sessions = Object.values(allSessionsMap)
+                .filter(hasSessionAnyFilledSet)
+                .sort((a, b) => (a.dateStr < b.dateStr ? 1 : -1));
+
+            if (sessions.length === 0) {
+                listEl.innerHTML = `
+                    <div class="text-center py-10 text-slate-400 space-y-2">
+                        <i class="fa-solid fa-folder-open text-3xl text-slate-600"></i>
+                        <p class="text-sm">Aucune séance enregistrée pour le moment.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            listEl.innerHTML = sessions.map(sess => {
+                const plan = WORKOUT_PLAN[sess.dayNumber] || WORKOUT_PLAN[1];
+                let setCounter = 0;
+                let totalVol = 0;
+                Object.values(sess.exercises || {}).forEach(sets => {
+                    sets.forEach(s => {
+                        const w = parseFloat(s.weight) || 0;
+                        const r = parseInt(s.reps, 10) || 0;
+                        if (w > 0 || r > 0) {
+                            setCounter++;
+                            totalVol += w * r;
+                        }
+                    });
+                });
+
+                return `
+                    <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-bold px-2 py-0.5 rounded bg-brand-500/20 text-brand-300 border border-brand-500/30">
+                                    ${sess.dateStr}
+                                </span>
+                                <h4 class="font-display font-bold text-sm text-white uppercase">${plan.title}</h4>
+                            </div>
+                            <p class="text-xs text-slate-400 mt-1 capitalize">
+                                ${formatHumanDateFr(sess.dateStr)} • <strong class="text-slate-200">${setCounter} séries</strong> • Volume : <strong class="text-brand-400">${totalVol.toLocaleString('fr-FR')} kg</strong>
+                            </p>
+                            ${sess.notes ? `<p class="text-xs text-slate-400 italic mt-1">"${sess.notes}"</p>` : ''}
+                        </div>
+                        <div class="flex items-center gap-2 self-end sm:self-center shrink-0">
+                            <button data-goto-date="${sess.dateStr}" class="goto-session-btn text-xs font-semibold px-3 py-1.5 rounded-lg bg-brand-500 hover:bg-brand-400 text-slate-950 transition">
+                                Ouvrir
+                            </button>
+                            <button data-delete-date="${sess.dateStr}" class="delete-session-btn text-xs px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-rose-950 text-slate-400 hover:text-rose-300 border border-slate-700 transition" title="Supprimer">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            listEl.querySelectorAll('.goto-session-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    selectedDateStr = btn.getAttribute('data-goto-date');
+                    allowRestDayOverride = false;
+                    document.getElementById('historyModal').classList.add('hidden');
+                    renderFullUI();
+                });
+            });
+
+            listEl.querySelectorAll('.delete-session-btn').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const dStr = btn.getAttribute('data-delete-date');
+                    delete allSessionsMap[dStr];
+                    saveToLocalStorage();
+                    if (db && currentUser) {
+                        try {
+                            await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'workout_sessions', dStr));
+                        } catch (e) {
+                            console.error(e);
+                        }
+                    }
+                    renderHistoryModal();
+                    renderFullUI();
+                    showToast(`Séance du ${dStr} supprimée.`);
+                });
+            });
+        }
+
+        // Fonctions utilitaires d'Export / Import (.json) et Plein Écran
+        function triggerJsonBackupExport() {
+            saveToLocalStorage();
+            const exportDateStr = toDateInputString(new Date());
+            const nowFormatted = new Date().toLocaleDateString('fr-FR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            const dataStr = JSON.stringify(allSessionsMap, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `upone_sauvegarde_${exportDateStr}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            localStorage.setItem(LAST_EXPORT_STORAGE_KEY, nowFormatted);
+            updateBackupStatusBanner();
+            showToast(`Fichier upone_sauvegarde_${exportDateStr}.json téléchargé !`);
+        }
+
+        function handleJsonBackupImport(file) {
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async (ev) => {
+                try {
+                    const imported = JSON.parse(ev.target.result);
+                    if (imported && typeof imported === 'object') {
+                        allSessionsMap = { ...allSessionsMap, ...imported };
+                        saveToLocalStorage();
+                        for (const dKey of Object.keys(imported)) {
+                            await persistSession(dKey);
+                        }
+                        renderHistoryModal();
+                        renderFullUI();
+                        const importedCount = Object.keys(imported).length;
+                        showToast(`${importedCount} séance(s) importée(s) et sauvegardée(s) !`);
+                    }
+                } catch (err) {
+                    showToast("Erreur : Le fichier JSON sélectionné est invalide.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function toggleFullscreenMode() {
+            const docEl = document.documentElement;
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                if (docEl.requestFullscreen) {
+                    docEl.requestFullscreen().catch(() => {
+                        showToast("Plein écran non autorisé par ce conteneur.");
+                    });
+                } else if (docEl.webkitRequestFullscreen) {
+                    docEl.webkitRequestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                }
+            }
+        }
+
+        function updateFullscreenButtonUI() {
+            const icon = document.getElementById('fullscreenIcon');
+            const text = document.getElementById('fullscreenBtnText');
+            const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+            if (icon) {
+                icon.className = isFs ? "fa-solid fa-compress text-accent-400" : "fa-solid fa-expand text-brand-400";
+            }
+            if (text) {
+                text.textContent = isFs ? "Quitter Plein Écran" : "Plein Écran";
+            }
+        }
+
+        // ==========================================
+        // 10. CHRONOMÈTRE DE REPOS & TOAST UI
+        // ==========================================
+        let timerInterval = null;
+        let remainingSeconds = 90;
+
+        function updateTimerDisplay() {
+            const mins = String(Math.floor(remainingSeconds / 60)).padStart(2, '0');
+            const secs = String(remainingSeconds % 60).padStart(2, '0');
+            document.getElementById('restTimerDisplay').textContent = `${mins}:${secs}`;
+        }
+
+        function toggleRestTimer() {
+            const btn = document.getElementById('startTimerBtn');
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+                btn.textContent = "Go";
+                return;
+            }
+            btn.textContent = "Pause";
+            timerInterval = setInterval(() => {
+                if (remainingSeconds > 0) {
+                    remainingSeconds--;
+                    updateTimerDisplay();
+                } else {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                    btn.textContent = "Go";
+                    remainingSeconds = 90;
+                    updateTimerDisplay();
+                    showToast("⏱️ Temps de repos terminé ! À vous de jouer !");
+                }
+            }, 1000);
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toastNotification');
+            document.getElementById('toastMessage').textContent = message;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3200);
+        }
+
+        // ==========================================
+        // 11. ÉCOUTEURS GLOBAUX AU CHARGEMENT
+        // ==========================================
+        window.addEventListener('DOMContentLoaded', () => {
+            // Sélecteur de date
+            document.getElementById('sessionDateInput').addEventListener('change', (e) => {
+                if (e.target.value) {
+                    selectedDateStr = e.target.value;
+                    allowRestDayOverride = false;
+                    renderFullUI();
+                }
+            });
+
+            document.getElementById('prevDayBtn').addEventListener('click', () => {
+                selectedDateStr = addDaysToDateStr(selectedDateStr, -1);
+                allowRestDayOverride = false;
+                renderFullUI();
+            });
+
+            document.getElementById('nextDayBtn').addEventListener('click', () => {
+                selectedDateStr = addDaysToDateStr(selectedDateStr, 1);
+                allowRestDayOverride = false;
+                renderFullUI();
+            });
+
+            document.getElementById('todayBtn').addEventListener('click', () => {
+                selectedDateStr = toDateInputString(new Date());
+                allowRestDayOverride = false;
+                renderFullUI();
+            });
+
+            // Bouton principal "Voir la séance à J-7"
+            document.getElementById('toggleJ7Btn').addEventListener('click', () => {
+                showJ7Comparison = !showJ7Comparison;
+                renderFullUI();
+            });
+
+            // Copier toutes les charges de la séance J-7
+            document.getElementById('copyAllJ7Btn').addEventListener('click', () => {
+                const activeDayNumber = getActiveDayNumber();
+                const j7Info = findClosestSessionMinus7Days(selectedDateStr, activeDayNumber);
+                if (!j7Info.match) return;
+
+                const sess = ensureCurrentSessionInitialized();
+                Object.keys(j7Info.match.exercises || {}).forEach(exId => {
+                    sess.exercises[exId] = j7Info.match.exercises[exId].map(s => ({
+                        weight: s.weight,
+                        reps: s.reps,
+                        done: true
+                    }));
+                });
+                persistSession(selectedDateStr);
+                renderFullUI();
+                showToast(`Charges du ${j7Info.match.dateStr} copiées dans votre séance !`);
+            });
+
+            // Notes globales de séance
+            document.getElementById('sessionGlobalNotes').addEventListener('input', (e) => {
+                const sess = ensureCurrentSessionInitialized();
+                sess.notes = e.target.value;
+                scheduleAutoSave(selectedDateStr);
+            });
+
+            // Bouton Enregistrer manuel
+            document.getElementById('manualSaveBtn').addEventListener('click', () => {
+                ensureCurrentSessionInitialized();
+                persistSession(selectedDateStr);
+                showToast("Séance enregistrée avec succès !");
+            });
+
+            // Bouton Démo J-7
+            document.getElementById('seedDemoBtn').addEventListener('click', () => {
+                seedPreviousWeekDemoData();
+            });
+
+            // Modal Historique
+            document.getElementById('openHistoryBtn').addEventListener('click', () => {
+                renderHistoryModal();
+                document.getElementById('historyModal').classList.remove('hidden');
+            });
+
+            const closeHistory = () => document.getElementById('historyModal').classList.add('hidden');
+            document.getElementById('closeHistoryModalBtn').addEventListener('click', closeHistory);
+            document.getElementById('closeHistoryBottomBtn').addEventListener('click', closeHistory);
+
+            // Bouton Plein Écran
+            document.getElementById('fullscreenToggleBtn').addEventListener('click', toggleFullscreenMode);
+            document.addEventListener('fullscreenchange', updateFullscreenButtonUI);
+            document.addEventListener('webkitfullscreenchange', updateFullscreenButtonUI);
+
+            // Export JSON (Barre principale + Modal Historique)
+            document.getElementById('exportJsonBtn').addEventListener('click', triggerJsonBackupExport);
+            document.getElementById('quickExportJsonBtn').addEventListener('click', triggerJsonBackupExport);
+
+            // Import JSON (Barre principale + Modal Historique)
+            document.getElementById('importJsonInput').addEventListener('change', (e) => {
+                handleJsonBackupImport(e.target.files[0]);
+                e.target.value = "";
+            });
+            document.getElementById('quickImportJsonInput').addEventListener('change', (e) => {
+                handleJsonBackupImport(e.target.files[0]);
+                e.target.value = "";
+            });
+
+            // Chronomètre
+            document.getElementById('startTimerBtn').addEventListener('click', toggleRestTimer);
+            document.getElementById('resetTimerBtn').addEventListener('click', () => {
+                if (timerInterval) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                    document.getElementById('startTimerBtn').textContent = "Go";
+                }
+                remainingSeconds = 90;
+                updateTimerDisplay();
+            });
+
+            // Démarrage
+            renderFullUI();
+            initCloudStorage();
+        });
+    </script>
+</body>
+</html>
