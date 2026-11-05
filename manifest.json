@@ -1,0 +1,19 @@
+{
+  "name": "UPONE Coaching",
+  "short_name": "UPONE",
+  "description": "Carnet de suivi d'entraînement et surcharge progressive",
+  "start_url": "/Upone/",
+  "scope": "/Upone/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#1d4ed8",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "upone_icon_512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
